@@ -1,0 +1,50 @@
+@echo off
+title ODIS VAS-6154 
+CHCP 65001 > nul
+ 
+set loop=0
+echo .:: Parowanie VAS-6154 v1.0 ::.
+echo -------------------------------
+echo.
+set /p ENTER=Podłącz VAS-6154 do gniazda ODB, a następnie naciśnij klawisz [ENTER] 
+
+if "%ENTER%"=="" goto reset
+
+:reset
+	echo.
+	echo Łączenie...
+	netsh wlan disconnect > nul 
+	netsh interface set interface "Wi-Fi 2" disable > nul
+	timeout 3 > nul
+	netsh interface set interface "Wi-Fi 2" enable > nul
+	goto loop
+
+:loop
+	netsh wlan show networks | find "VAS-6154"
+	if %ERRORLEVEL% equ 0 (
+		netsh wlan connect name="VAS-6154" > nul
+		goto connected
+	) else (
+		timeout 2 > nul
+		set /a loop=%loop%+1
+		if %loop%==5 goto noconnected
+		goto loop
+	)
+
+:connected
+	echo.
+	echo Połączono!
+	echo.
+	timeout 2 > nul
+	start OffboardDiagLauncher.exe
+	exit
+
+:noconnected
+	echo.
+	echo Błąd połączenia. Upewnij się czy VAS-6154 jest poprawnie podłączony lub uruchom ponownie komputer.
+	echo.
+	echo Naciśnij dowolny klawisz aby zamknąć... 
+	pause > nul  
+
+
+
